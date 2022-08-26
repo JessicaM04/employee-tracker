@@ -70,9 +70,8 @@ const getAllDepartments = (() => {
     'SELECT * FROM department', 
     function(err, results, fields) {
       console.table(results);
+      promptQuestions(questions);
   });
-  promptQuestions(questions);
-
 });
 
 const getAllRoles = (() => {
@@ -123,6 +122,7 @@ const addRole = (() => {
       }
     );
   });
+  promptQuestions();
 })
 
 const getAllEmployees = (() => {
@@ -174,10 +174,12 @@ const addEmployee = (() => {
       }
     );
   });
+  promptQuestions();
 })
 
 const addDepartment = (() => {
   const mysql = require("mysql2");
+  let departmentCount = 0;
 
   // Setting up database
   const db = mysql.createConnection(
@@ -188,6 +190,13 @@ const addDepartment = (() => {
       database: "employee_tracker"
     },
   );
+  db.query(
+    'SELECT * FROM department', 
+    function(err, results, fields) {
+      if (err) throw err;
+      departmentCount = results.length;
+      console.table(results);
+  });
   inquirer
   .prompt([
     {
@@ -197,11 +206,14 @@ const addDepartment = (() => {
   }])
   .then((answers) => {
     console.log(answers);
+    const departmentName = answers.newDepartment;
     db.query(
-      "INSERT INTO department (name) VALUES(?)",
-      [answers.newDepartment],
-      (err, result, fields) => {
-        console.log(results);
+      "INSERT INTO department (id, name) VALUES(?,?)",
+      [departmentCount + 1, departmentName],
+      function (err) {
+        if (err) throw (err);
+        promptQuestions(questions);
+        console.log(answers);
       }
     );
   });
